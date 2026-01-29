@@ -19,4 +19,7 @@ public class Question {
 
     @Column(name = "question", nullable = false, length = 500)
     private String text;
+
+    @Column(name = "duration", nullable = false)
+    private Integer duration;
 }

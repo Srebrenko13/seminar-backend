@@ -2,7 +2,6 @@ package hr.fer.seminarbackend.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.OffsetDateTime;
 
 @Entity
@@ -17,11 +16,14 @@ public class GamePlayerAnswer {
     private GamePlayerAnswerId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumns({
-            @JoinColumn(name = "game_id", referencedColumnName = "game_id", insertable = false, updatable = false),
-            @JoinColumn(name = "player_id", referencedColumnName = "player_id", insertable = false, updatable = false)
-    })
-    private GamePlayer gamePlayer;
+    @MapsId("gameId")
+    @JoinColumn(name = "game_id", nullable = false)
+    private Game game;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("playerId")
+    @JoinColumn(name = "player_id", nullable = false)
+    private Player player;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumns({
@@ -52,19 +54,9 @@ public class GamePlayerAnswer {
     @Column(name = "answered_at", nullable = false, insertable = false, updatable = false)
     private OffsetDateTime answeredAt;
 
-    public GamePlayerAnswer(Long gameId, Long playerId, Long questionId) {
-        this.id = new GamePlayerAnswerId(gameId, playerId, questionId);
-        this.points = 0;
-    }
-
-    public void chooseAnswer(Answer answer) {
-        if (answer == null) {
-            this.answerId = null;
-            this.selectedAnswer = null;
-            return;
-        }
-        this.answerId = answer.getId();
-        this.selectedAnswer = answer;
+    public GamePlayerAnswer(Game game, Player player, Question question) {
+        this.game = game;
+        this.player = player;
+        this.id = new GamePlayerAnswerId(game.getId(), player.getId(), question.getId());
     }
 }
-
