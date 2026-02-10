@@ -1,5 +1,6 @@
 package hr.fer.seminarbackend.model.DTO;
 
+import hr.fer.seminarbackend.model.Player;
 import lombok.*;
 
 import java.time.OffsetDateTime;
@@ -8,6 +9,11 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GameDto {
-    private Long id;
+    private Long gameId;
     private OffsetDateTime createdAt;
+    private Player playerOne;
+    private Player playerTwo;
+    private Boolean finished;
+    private Double scoreOne;
+    private Double scoreTwo;
 }

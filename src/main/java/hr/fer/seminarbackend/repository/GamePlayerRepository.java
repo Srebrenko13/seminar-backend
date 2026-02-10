@@ -2,6 +2,10 @@ package hr.fer.seminarbackend.repository;
 
 import hr.fer.seminarbackend.model.GamePlayerAnswer;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
-public interface GamePlayerRepository extends JpaRepository<GamePlayerAnswer, Long> {
+@Repository
+public interface GamePlayerRepository extends JpaRepository<GamePlayerAnswer, Long>,
+        JpaSpecificationExecutor<GamePlayerAnswer>{
 }

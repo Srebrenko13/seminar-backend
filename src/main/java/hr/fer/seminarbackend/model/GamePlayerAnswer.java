@@ -7,13 +7,13 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "game_player_answer")
 @Getter @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class GamePlayerAnswer {
 
     @EmbeddedId
     @EqualsAndHashCode.Include
-    private GamePlayerAnswerId id;
+    private GamePlayerAnswerId gamePlayerAnswerId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("gameId")
@@ -31,9 +31,6 @@ public class GamePlayerAnswer {
             @JoinColumn(name = "question_id", referencedColumnName = "question_id", insertable = false, updatable = false)
     })
     private GameQuestion gameQuestion;
-
-    @Column(name = "answer_id")
-    private Long answerId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumns({
@@ -57,6 +54,6 @@ public class GamePlayerAnswer {
     public GamePlayerAnswer(Game game, Player player, Question question) {
         this.game = game;
         this.player = player;
-        this.id = new GamePlayerAnswerId(game.getId(), player.getId(), question.getId());
+        this.gamePlayerAnswerId = new GamePlayerAnswerId(game.getGameId(), player.getPlayerId(), question.getQuestionId());
     }
 }

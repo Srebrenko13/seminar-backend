@@ -6,7 +6,7 @@ import lombok.*;
 @Entity
 @Table(name = "question")
 @Getter @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Question {
@@ -15,7 +15,7 @@ public class Question {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "question_id")
     @EqualsAndHashCode.Include
-    private Long id;
+    private Long questionId;
 
     @Column(name = "question", nullable = false, length = 500)
     private String text;

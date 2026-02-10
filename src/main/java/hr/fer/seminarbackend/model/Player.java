@@ -6,7 +6,7 @@ import lombok.*;
 @Entity
 @Table(name = "player")
 @Getter @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Player {
@@ -15,7 +15,7 @@ public class Player {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "player_id")
     @EqualsAndHashCode.Include
-    private Long id;
+    private Long playerId;
 
     @Column(name = "username", nullable = false, unique = true, length = 20)
     private String username;

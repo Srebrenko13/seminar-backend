@@ -6,6 +6,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuestionDto {
-    private Long id;
+    private Long questionId;
     private String text;
+    private Integer duration;
 }

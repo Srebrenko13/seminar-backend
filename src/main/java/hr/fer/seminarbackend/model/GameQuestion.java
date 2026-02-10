@@ -12,13 +12,13 @@ import lombok.*;
         )
 )
 @Getter @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class GameQuestion {
 
     @EmbeddedId
     @EqualsAndHashCode.Include
-    private GameQuestionId id;
+    private GameQuestionId gameQuestionId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @MapsId("gameId")
@@ -37,6 +37,6 @@ public class GameQuestion {
         this.game = game;
         this.question = question;
         this.position = position;
-        this.id = new GameQuestionId(game.getId(), question.getId());
+        this.gameQuestionId = new GameQuestionId(game.getGameId(), question.getQuestionId());
     }
 }

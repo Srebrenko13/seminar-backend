@@ -6,6 +6,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PlayerDto {
-    private Long id;
+    private Long playerId;
     private String username;
 }
