@@ -16,6 +16,8 @@ public class ActiveGameSession {
     private final Long gameId;
     private final Long playerOneId;
     private final Long playerTwoId;
+    private final String playerOneUsername;
+    private final String playerTwoUsername;
     private final OffsetDateTime startTime;
 
     private WebSocketSession playerOneSession;
@@ -35,10 +37,14 @@ public class ActiveGameSession {
     public ActiveGameSession(Game game,
                              WebSocketSession playerOneSession,
                              WebSocketSession playerTwoSession,
-                             WebSocketSession screenSession) {
+                             WebSocketSession screenSession,
+                             String playerOneUsername,
+                             String playerTwoUsername) {
         this.gameId = game.getGameId();
         this.playerOneId = game.getPlayerOne().getPlayerId();
         this.playerTwoId = game.getPlayerTwo().getPlayerId();
+        this.playerOneUsername = playerOneUsername;
+        this.playerTwoUsername = playerTwoUsername;
         this.playerOneSession = playerOneSession;
         this.playerTwoSession = playerTwoSession;
         this.screenSession = screenSession;

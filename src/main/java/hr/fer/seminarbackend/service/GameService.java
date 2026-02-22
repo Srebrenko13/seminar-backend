@@ -33,7 +33,8 @@ public class GameService {
     private final ObjectMapper mapper;
 
     private final Map<Long, ActiveGameSession> activeGames = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
+    private final ScheduledExecutorService scheduler =
+            Executors.newScheduledThreadPool(4, Thread.ofVirtual().factory());
     private final Map<Long, ScheduledFuture<?>> activeTimers = new ConcurrentHashMap<>();
 
     @Transactional
@@ -54,11 +55,12 @@ public class GameService {
 
         Game savedGame = gameRepository.save(newGame);
 
-        ActiveGameSession session = new ActiveGameSession(savedGame, session1, session2, screenSession);
+        ActiveGameSession session = new ActiveGameSession(savedGame, session1, session2, screenSession,
+                usernameOne, usernameTwo);
 
         session.setQuestions(questionRepository.findRandomQuestions(10));
 
-        activeGames.put(savedGame.getGameId(),  session);
+        activeGames.put(savedGame.getGameId(), session);
         return session;
     }
 
@@ -77,26 +79,34 @@ public class GameService {
                     return answerDto;
                 }).collect(Collectors.toList());
 
-        long activationTime = System.currentTimeMillis() + 5000;
+        long activationDelay = 5000;
+        long activationTime = System.currentTimeMillis() + activationDelay;
         session.setQuestionStartTime(activationTime);
         session.setAcceptingAnswers(true);
         session.getPlayersWhoAnswered().clear();
 
         var roundDto = Map.of(
-                "type", "QUESTION",
+                "type", ServerMessage.MessageType.QUESTION,
                 "question", question.getText(),
                 "answers", answersDto,
                 "duration", question.getDuration(),
                 "activationTime", activationTime,
+                "activationDelay", activationDelay,
                 "index", session.getCurrentQuestionIndex() + 1
         );
 
         broadcastToGame(gameId, roundDto);
 
-        long totalWaitTime = 5 + question.getDuration();
+        long activationDelayMs = 5000;
+        long questionDurationMs = question.getDuration() * 1000L;
+
+        long gracePeriod = 5000;
+
+        long totalWaitTimeMs = activationDelayMs + questionDurationMs + gracePeriod;
+
         ScheduledFuture<?> timeoutTask = scheduler.schedule(() -> {
             forceRoundEnd(gameId);
-        }, totalWaitTime, TimeUnit.SECONDS);
+        }, totalWaitTimeMs, TimeUnit.MILLISECONDS);
 
         activeTimers.put(gameId, timeoutTask);
     }
@@ -108,7 +118,7 @@ public class GameService {
         long now = System.currentTimeMillis();
         long reactionTime = now - session.getQuestionStartTime();
 
-        if (reactionTime < 0) return; // Cheating check
+        if (reactionTime < 0) return;
 
         if (session.getPlayersWhoAnswered().add(playerId)) {
             Answer answer = answerRepository.findById(answerId).orElse(null);
@@ -140,7 +150,8 @@ public class GameService {
         }
     }
 
-    private void endRound(ActiveGameSession session) {
+    @Transactional
+    void endRound(ActiveGameSession session) {
         session.setAcceptingAnswers(false);
 
         Question currentQuestion = session.getCurrentQuestion();
@@ -150,7 +161,9 @@ public class GameService {
                 .orElse(-1L);
 
         var results = Map.of(
-                "type", "ROUND_RESULTS",
+                "type", ServerMessage.MessageType.ROUND_RESULT,
+                "playerOne", session.getPlayerOneUsername(),
+                "playerTwo", session.getPlayerTwoUsername(),
                 "scoreOne", session.getScoreOne(),
                 "scoreTwo", session.getScoreTwo(),
                 "correctAnswerId", correctAnswerId
@@ -158,15 +171,19 @@ public class GameService {
         broadcastToGame(session.getGameId(), results);
 
         session.setCurrentQuestionIndex(session.getCurrentQuestionIndex() + 1);
+    }
 
-        scheduler.schedule(() -> {
-            if (session.getCurrentQuestionIndex() < session.getQuestions().size()) {
-                startNextQuestion(session.getGameId());
-            } else {
-                finishAndSaveGame(session.getGameId());
-                broadcastToGame(session.getGameId(), Map.of("type", "GAME_END"));
-            }
-        }, 5, TimeUnit.SECONDS);
+    @Transactional
+    public void handleNextQuestionRequest(Long gameId) {
+        ActiveGameSession session = activeGames.get(gameId);
+        if (session == null) return;
+
+        if (session.getCurrentQuestionIndex() < session.getQuestions().size()) {
+            startNextQuestion(gameId);
+        } else {
+            broadcastToGame(gameId, Map.of("type", ServerMessage.MessageType.GAME_END));
+            finishAndSaveGame(gameId);
+        }
     }
 
     private void cancelTimer(Long gameId) {
